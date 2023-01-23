@@ -2,7 +2,7 @@ from drf_spectacular.utils import extend_schema
 from drf_spectacular.utils import extend_schema_view
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
@@ -11,6 +11,8 @@ from .models import Pokemon
 from .serializers import PokemonDetailsSerializer
 from .serializers import PokemonGiveXPSerializer
 from .serializers import PokemonSerializer
+
+##from rest_framework.permissions import IsAuthenticated
 
 
 @extend_schema_view(
@@ -32,7 +34,7 @@ from .serializers import PokemonSerializer
     ),
 )
 class PokemonViewSet(ModelViewSet):
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (AllowAny,)
     queryset = Pokemon.objects.all().order_by("pokedex_creature__ref_number")
     serializer_class = PokemonSerializer
     filterset_class = PokemonFilter
@@ -44,6 +46,10 @@ class PokemonViewSet(ModelViewSet):
             return PokemonGiveXPSerializer
 
         return PokemonSerializer
+
+    def get_filterset_class(self):
+        if self.request.user:
+            return Pokemon.objects.filter(trainer=self.request.user)
 
     @action(methods=["POST"], detail=True, url_path="give_xp")
     @extend_schema(responses=PokemonSerializer)
