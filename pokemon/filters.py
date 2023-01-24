@@ -6,6 +6,7 @@ from .models import Pokemon
 class PokemonFilter(filters.FilterSet):
     """Filters for pokedex creature listing"""
 
+    trainer = filters.CharFilter(field_name="trainer", lookup_expr="exact")
     nickname = filters.CharFilter(field_name="nickname", lookup_expr="icontains")
     wild = filters.BooleanFilter(field_name="trainer_id", lookup_expr="isnull")
     name = filters.CharFilter(
@@ -22,8 +23,4 @@ class PokemonFilter(filters.FilterSet):
 
     class Meta:
         model = Pokemon
-        fields = [
-            "trainer",
-            "nickname",
-            "pokedex_creature",
-        ]
+        fields = ["trainer"]

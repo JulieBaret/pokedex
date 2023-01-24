@@ -2,7 +2,7 @@ from drf_spectacular.utils import extend_schema
 from drf_spectacular.utils import extend_schema_view
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
@@ -12,15 +12,13 @@ from .serializers import PokemonDetailsSerializer
 from .serializers import PokemonGiveXPSerializer
 from .serializers import PokemonSerializer
 
-##from rest_framework.permissions import IsAuthenticated
-
 
 @extend_schema_view(
     create=extend_schema(
         description="API endpoint to create a pokemon\n\nSome fields are optionnal : trainer, nickname, level, experience"
     ),
     list=extend_schema(
-        description="API endpoint to get a list of pokemons, with filtering options"
+        description="API endpoint to get a list of pokemons owned by the logged trainer, with filtering options"
     ),
     retrieve=extend_schema(
         description="API endpoint to retrieve a specific pokemon, which gives on him detailed informations"
@@ -34,7 +32,7 @@ from .serializers import PokemonSerializer
     ),
 )
 class PokemonViewSet(ModelViewSet):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAuthenticated,)
     queryset = Pokemon.objects.all().order_by("pokedex_creature__ref_number")
     serializer_class = PokemonSerializer
     filterset_class = PokemonFilter
@@ -44,12 +42,14 @@ class PokemonViewSet(ModelViewSet):
             return PokemonDetailsSerializer
         elif self.action == "give_xp":
             return PokemonGiveXPSerializer
+        elif self.action == "list":
+            return PokemonSerializer
 
         return PokemonSerializer
 
-    def get_filterset_class(self):
-        if self.request.user:
-            return Pokemon.objects.filter(trainer=self.request.user)
+    # def get_filterset_class(self):
+    #     if self.action == "list":
+    #         return PokemonSerializer
 
     @action(methods=["POST"], detail=True, url_path="give_xp")
     @extend_schema(responses=PokemonSerializer)
